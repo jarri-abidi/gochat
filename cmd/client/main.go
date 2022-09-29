@@ -11,11 +11,11 @@ import (
 )
 
 type Message struct {
-	MsgID     int64  `json: "message_id"`
-	MsgFrom   int64  `json: "message_from"`
-	MsgTo     int64  `json: "message_to"`
+	MsgID     int64  `json: "messageID"`
+	MsgFrom   int64  `json: "messageFrom"`
+	MsgTo     int64  `json: "messageTo"`
 	Content   string `json: "content"`
-	CreatedAt string `json: "created_at"`
+	CreatedAt string `json: "createdAt"`
 }
 
 func main() {
@@ -34,18 +34,18 @@ func main() {
 		defer close(done)
 		var msg Message
 		for {
-			conn.ReadJSON(&msg)
+			err = conn.ReadJSON(&msg)
 			if err != nil {
 				logger.Log("err", err)
 				return
 			}
 			logger.Log(
-			   "from", "server", 
-			   "msgId", msg.MsgId, 
-			   "from", msg.MsgFrom, 
-			   "to", msg.MsgTo, 
-			   "content", msg.Content, 
-			   "createdAt", msg.CreatedAt,
+				"from", "server",
+				"msgId", msg.MsgID,
+				"from", msg.MsgFrom,
+				"to", msg.MsgTo,
+				"content", msg.Content,
+				"createdAt", msg.CreatedAt,
 			)
 		}
 	}()
@@ -62,9 +62,9 @@ func main() {
 		case <-done:
 			return
 		case t := <-ticker.C:
-			idcounter += 1
+			idCounter += 1
 			// will be changed later
-			msg.MsgId = idcounter
+			msg.MsgID = idCounter
 			msg.MsgFrom = 1
 			msg.MsgTo = -1
 			msg.Content = "hi"

@@ -9,11 +9,11 @@ import (
 )
 
 type Message struct {
-	MsgID     int64  `json:"message_id"`
-	MsgFrom   int64  `json: "message_from"`
-	MsgTo     int64  `json: "message_to"`
+	MsgID     int64  `json:"messageID"`
+	MsgFrom   int64  `json: "messageFrom"`
+	MsgTo     int64  `json: "messageTo"`
 	Content   string `json: "content"`
-	CreatedAt string `json: "created_at"`
+	CreatedAt string `json: "createdAt"`
 }
 
 func main() {
@@ -34,12 +34,19 @@ func ws(logger log.Logger) http.HandlerFunc {
 
 		var msg Message
 		for {
-			conn.ReadJSON(&msg)
+			err = conn.ReadJSON(&msg)
 			if err != nil {
 				logger.Log("err", err)
 				return
 			}
-			logger.Log("msgId", msg.MsgId, "from", msg.MsgFrom, "To", msg.MsgTo, "content", msg.Content, "createdat", msg.CreatedAt)
+			logger.Log(
+				"from", "client",
+				"msgId", msg.MsgID,
+				"from", msg.MsgFrom,
+				"To", msg.MsgTo,
+				"content", msg.Content,
+				"createdAt", msg.CreatedAt,
+			)
 
 			msg.MsgTo = msg.MsgFrom
 			msg.MsgFrom = -1
