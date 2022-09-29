@@ -11,11 +11,11 @@ import (
 )
 
 type Message struct {
-	MsgID     int64  `json: "messageId"`
-	MsgFrom   int64  `json: "messageFrom"`
-	MsgTo     int64  `json: "messageTo"`
-	Content   string `json: "content"`
-	CreatedAt string `json: "createdAt"`
+	MsgID     int64     `json: "messageId"`
+	MsgFrom   int64     `json: "messageFrom"`
+	MsgTo     int64     `json: "messageTo"`
+	Content   string    `json: "content"`
+	CreatedAt time.Time `json: "createdAt"`
 }
 
 func main() {
@@ -68,7 +68,7 @@ func main() {
 			msg.MsgFrom = 1
 			msg.MsgTo = -1
 			msg.Content = "hi"
-			msg.CreatedAt = t.String()
+			msg.CreatedAt = t
 			err := conn.WriteJSON(&msg)
 			if err != nil {
 				logger.Log("err", err)

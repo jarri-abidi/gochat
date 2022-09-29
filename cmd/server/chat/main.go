@@ -3,17 +3,18 @@ package main
 import (
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/go-kit/log"
 	"github.com/gorilla/websocket"
 )
 
 type Message struct {
-	MsgID     int64  `json:"messageId"`
-	MsgFrom   int64  `json: "messageFrom"`
-	MsgTo     int64  `json: "messageTo"`
-	Content   string `json: "content"`
-	CreatedAt string `json: "createdAt"`
+	MsgID     int64     `json:"messageId"`
+	MsgFrom   int64     `json: "messageFrom"`
+	MsgTo     int64     `json: "messageTo"`
+	Content   string    `json: "content"`
+	CreatedAt time.Time `json: "createdAt"`
 }
 
 func main() {
