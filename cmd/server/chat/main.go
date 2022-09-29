@@ -8,6 +8,14 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+type Message struct {
+	MsgId     int64  `json:"message_id"`
+	MsgFrom   int64  `json: "message_from"`
+	MsgTo     int64  `json: "message_to"`
+	Content   string `json: "content"`
+	CreatedAt string `json: "created_at"`
+}
+
 func main() {
 	logger := log.NewLogfmtLogger(os.Stderr)
 
@@ -24,15 +32,18 @@ func ws(logger log.Logger) http.HandlerFunc {
 		}
 		defer conn.Close()
 
+		var msg Message
 		for {
-			mt, msg, err := conn.ReadMessage()
+			conn.ReadJSON(&msg)
 			if err != nil {
 				logger.Log("err", err)
 				return
 			}
-			logger.Log("type", mt, "from", "client", "msg", string(msg))
+			logger.Log("msgId", msg.MsgId, "from", msg.MsgFrom, "To", msg.MsgTo, "content", msg.Content, "createdat", msg.CreatedAt)
 
-			if err := conn.WriteMessage(websocket.TextMessage, []byte("hello")); err != nil {
+			msg.MsgTo = msg.MsgFrom
+			msg.MsgFrom = -1
+			if err := conn.WriteJSON(&msg); err != nil {
 				logger.Log("err", err)
 				return
 			}
