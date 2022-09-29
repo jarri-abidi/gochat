@@ -39,7 +39,7 @@ func main() {
 				logger.Log("err", err)
 				return
 			}
-			logger.Log("from", "server", "msgId", msg.MsgId, "from", msg.MsgFrom, "To", msg.MsgTo, "content", msg.Content, "createdat", msg.CreatedAt)
+			logger.Log("from", "server", "msgId", msg.MsgId, "from", msg.MsgFrom, "To", msg.MsgTo, "content", msg.Content, "createdAt", msg.CreatedAt)
 		}
 	}()
 
