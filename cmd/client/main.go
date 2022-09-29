@@ -48,7 +48,7 @@ func main() {
 
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
-	var idcounter int64
+	var idCounter int64
 	var msg Message
 	for {
 		select {
