@@ -11,7 +11,7 @@ import (
 )
 
 type Message struct {
-	MsgID     int64  `json: "messageID"`
+	MsgID     int64  `json: "messageId"`
 	MsgFrom   int64  `json: "messageFrom"`
 	MsgTo     int64  `json: "messageTo"`
 	Content   string `json: "content"`
