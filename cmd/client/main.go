@@ -10,6 +10,14 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+type Message struct {
+	MsgID     int64     `json: "messageId"`
+	MsgFrom   int64     `json: "messageFrom"`
+	MsgTo     int64     `json: "messageTo"`
+	Content   string    `json: "content"`
+	CreatedAt time.Time `json: "createdAt"`
+}
+
 func main() {
 	logger := log.NewLogfmtLogger(os.Stderr)
 
@@ -24,13 +32,21 @@ func main() {
 	done := make(chan struct{})
 	go func() {
 		defer close(done)
+		var msg Message
 		for {
-			mt, msg, err := conn.ReadMessage()
+			err = conn.ReadJSON(&msg)
 			if err != nil {
 				logger.Log("err", err)
 				return
 			}
-			logger.Log("type", mt, "from", "server", "msg", string(msg))
+			logger.Log(
+				"from", "server",
+				"msgId", msg.MsgID,
+				"from", msg.MsgFrom,
+				"to", msg.MsgTo,
+				"content", msg.Content,
+				"createdAt", msg.CreatedAt,
+			)
 		}
 	}()
 
@@ -39,13 +55,21 @@ func main() {
 
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
-
+	var idCounter int64
+	var msg Message
 	for {
 		select {
 		case <-done:
 			return
-		case <-ticker.C:
-			err := conn.WriteMessage(websocket.TextMessage, []byte("hi"))
+		case t := <-ticker.C:
+			idCounter += 1
+			// will be changed later
+			msg.MsgID = idCounter
+			msg.MsgFrom = 1
+			msg.MsgTo = -1
+			msg.Content = "hi"
+			msg.CreatedAt = t
+			err := conn.WriteJSON(&msg)
 			if err != nil {
 				logger.Log("err", err)
 				return
