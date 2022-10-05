@@ -41,8 +41,8 @@ func NewUser(userName, fullName string, contacts ...Contact) (*User, error) {
 func (u User) ID() string          { return u.id }
 func (u User) UserName() string    { return u.userName }
 func (u User) FullName() string    { return u.fullName }
-func (u User) Groups() []Group     { return append([]Group{}, u.groups...) }
-func (u User) Contacts() []Contact { return append([]Contact{}, u.contacts...) }
+func (u User) Groups() []Group     { return append(make([]Group, 0, len(u.groups)), u.groups...) }
+func (u User) Contacts() []Contact { return append(make([]Contact, 0, len(u.contacts)), u.contacts...) }
 
 type Contact struct {
 	id       string
