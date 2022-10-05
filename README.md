@@ -2,17 +2,19 @@
 - User
 ```
 {
-    "id": "uuid/phone"
-    "username": "markhaur",
-    "groups": []
+    "id": B,
+    "fullName": "User B",
+    "userName": "markhaur",
+    "groups": [G1,G2],
+    "contacts": [A,C]
 }
 ```
 - Group
 ```
 {
-    "id": G1,
+    "id": G2,
     "name": ...,
-    "participants": []
+    "participants": [B, C]
 }
 ```
 - MessageSent
