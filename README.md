@@ -19,28 +19,65 @@
 ```
 {
     "id": 123
-    "toGroups": [G1]
-    "toUsers": [B]
-	"content": ... // imp for B
-	"createdAt": ...
-    "sentAt": ...
-    "received": [{"by": B, "at": "12:00:00"}] // imp for A
-    "seen": [{"by": B, "at": "12:00:00"}] // imp for A
+    "toGroups": [G1, G2]
+    "toUsers": [C, D]
+    "content": ...,
+    "createdAt": ...,
+    "sentAt": ...,
+    "received": [
+        {"by": B, "at": "12:00:00", "in": "G1"},
+        {"by": B, "at": "12:00:00", "in": "G2"},
+        {"by": C, "at": "12:05:00", "in": "G2"},
+        {"by": C, "at": "12:05:00"},
+        {"by": D, "at": "12:00:00"}
+    ] 
+    "seen": [
+        {"by": B, "at": "12:01:05", "in": "G1"},
+        {"by": B, "at": "12:01:00", "in": "G2"},
+        {"by": C, "at": "12:10:00", "in": "G2"},
+        {"by": C, "at": "12:10:05"},
+        {"by": D, "at": "12:20:00"}
+    ] 
 }
 ```
 - MessageReceived
 ```
+// By B:
 {
-    "messageId": 123
-    // "chatId": ...
-	"messageFrom": A
-	"content": ... // imp for B
-	"createdAt": ...
-    "sentAt": ...
+    "messageId": 123,
+    "in": [G1,G2],
+    "messageFrom": A,
+    "content": ..., 
+    "createdAt": ...,
+    "sentAt": ...,
     "receivedAt": ...
 }
 ```
-
+```
+// By C:
+{
+    "messageId": 123,
+    "in": [DM*,G2],
+    "messageFrom": A,
+    "content": ..., 
+    "createdAt": ...,
+    "sentAt": ...,
+    "receivedAt": ...
+}
+// *DM stands for Direct Message
+```
+```
+// By D:
+{
+    "messageId": 123,
+    "in": [DM],
+    "messageFrom": A,
+    "content": ..., 
+    "createdAt": ...,
+    "sentAt": ...,
+    "receivedAt": ...
+}
+```
 ### Usecases ###
 - User A can send a Message to User B
 - User B can send a Message to User A
