@@ -1,6 +1,7 @@
 package gochat
 
 import (
+	"fmt"
 	"time"
 )
 
@@ -11,11 +12,11 @@ type SentMessage struct {
 	content   []byte
 	createdAt time.Time
 	sentAt    time.Time
-	received  []stuff
-	seen      []stuff
+	received  []recipient
+	seen      []recipient
 }
 
-type stuff struct {
+type recipient struct {
 	by, in string
 	at     time.Time
 }
@@ -32,7 +33,7 @@ type ReceivedMessage struct {
 
 const DM = "DM"
 
-// NewMessage accepts a list of group IDs and user IDs to which the message needs to be sent.
+// NewMessage accepts a list of groups and users to which the message needs to be sent.
 // It also accepts the content as a slice of bytes. The value of createdAt should be the time
 // when the sender created the message as opposed to when it was received by the server.
 func NewMessage(
@@ -41,43 +42,63 @@ func NewMessage(
 	toUsers []User,
 	content []byte,
 	createdAt time.Time,
-) (*SentMessage, []ReceivedMessage, error) {
-	// id := "" // TODO: generate uuid
+) (*SentMessage, map[string]ReceivedMessage, error) {
+	var (
+		id  = "" // TODO: generate uuid
+		now = time.Now()
+		rms = make(map[string]ReceivedMessage, 0)
+	)
 
 	groupIDs := make([]string, 0, len(toGroups))
 	for _, g := range toGroups {
 		groupIDs = append(groupIDs, g.id)
+		for _, p := range g.participants {
+			rm, found := rms[p.id]
+			if found {
+				rm.in = append(rm.in, g.id)
+				continue
+			}
+
+			rms[p.id] = ReceivedMessage{
+				id:          fmt.Sprintf("%s-%s", p.id, id), // TODO: need to discuss
+				in:          []string{g.id},
+				messageFrom: sender.id,
+				content:     content,
+				createdAt:   createdAt,
+				sentAt:      now,
+			}
+		}
 	}
 
 	userIDs := make([]string, 0, len(toUsers))
 	for _, u := range toUsers {
 		userIDs = append(userIDs, u.id)
+		rm, found := rms[u.id]
+		if found {
+			rm.in = append(rm.in, DM)
+			continue
+		}
+
+		rms[u.id] = ReceivedMessage{
+			id:          fmt.Sprintf("%s-%s", u.id, id), // TODO: need to discuss
+			in:          []string{DM},
+			messageFrom: sender.id,
+			content:     content,
+			createdAt:   createdAt,
+			sentAt:      now,
+		}
 	}
 
-	// sentAt := time.Now()
-	// sm := SentMessage{
-	// 	id:        fmt.Sprintf("%s-%s", sender.ID(), id),
-	// 	toGroups:  groupIDs,
-	// 	toUsers:   userIDs,
-	// 	content:   content,
-	// 	createdAt: createdAt,
-	// 	sentAt:    sentAt,
-	// 	received:  make([]stuff, 0, 0),
-	// 	seen:      make([]stuff, 0, 0),
-	// }
+	sm := SentMessage{
+		id:        fmt.Sprintf("%s-%s", sender.ID(), id),
+		toGroups:  groupIDs,
+		toUsers:   userIDs,
+		content:   content,
+		createdAt: createdAt,
+		sentAt:    now,
+		received:  make([]recipient, 0, 0),
+		seen:      make([]recipient, 0, 0),
+	}
 
-	// var rms []ReceivedMessage
-	// for _, g := range toGroups {
-
-	// 	rm := ReceivedMessage{
-	// 		id:          "",
-	// 		in:          nil,
-	// 		messageFrom: sender.id,
-	// 		content:     content,
-	// 		createdAt:   createdAt,
-	// 		sentAt:      sentAt,
-	// 	}
-	// }
-
-	return nil, nil, nil
+	return &sm, rms, nil
 }
