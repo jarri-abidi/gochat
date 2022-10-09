@@ -1,6 +1,7 @@
 package gochat
 
 import (
+	"context"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -24,4 +25,11 @@ func NewGroup(name string, participants ...Contact) (*Group, error) {
 		name:         name,
 		participants: participants,
 	}, nil
+}
+
+type GroupRepository interface {
+	Insert(context.Context, Group) (*Group, error)
+	FindAll(context.Context) ([]Group, error)
+	FindByID(ctx context.Context, id string) (*Group, error)
+	Update(context.Context, Group) error
 }
