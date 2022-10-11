@@ -106,3 +106,12 @@ save in (instancesByUser(B)) // 1
 save in (instancesByUser(A)) // 2
 
 Duplication?
+
+
+
+CS1 CS2
+^    ^
+A -> B
+
+CS1 -> CS2
+event

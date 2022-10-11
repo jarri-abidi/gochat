@@ -27,6 +27,8 @@ func NewGroup(name string, participants ...Contact) (*Group, error) {
 	}, nil
 }
 
+func (g Group) ID() string { return g.id }
+
 type GroupRepository interface {
 	Insert(context.Context, Group) (*Group, error)
 	FindAll(context.Context) ([]Group, error)
