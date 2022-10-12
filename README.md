@@ -20,7 +20,7 @@
 - MessageSent
 ```
 {
-    "id": 123
+    "id": "123"
     "toGroups": [G1, G2]
     "toUsers": [C, D]
     "content": ...,
@@ -46,7 +46,7 @@
 ```
 // By B:
 {
-    "messageId": 123,
+    "id": "123",
     "in": [G1,G2],
     "messageFrom": A,
     "content": ..., 
@@ -58,7 +58,7 @@
 ```
 // By C:
 {
-    "messageId": 123,
+    "id": "123",
     "in": [DM*,G2],
     "messageFrom": A,
     "content": ..., 
@@ -71,7 +71,7 @@
 ```
 // By D:
 {
-    "messageId": 123,
+    "id": "123",
     "in": [DM],
     "messageFrom": A,
     "content": ..., 
@@ -106,3 +106,12 @@ save in (instancesByUser(B)) // 1
 save in (instancesByUser(A)) // 2
 
 Duplication?
+
+
+
+CS1 CS2
+^    ^
+A -> B
+
+CS1 -> CS2
+event
