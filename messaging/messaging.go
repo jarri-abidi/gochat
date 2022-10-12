@@ -11,7 +11,7 @@ import (
 
 type Service interface {
 	Send(context.Context, SendRequest) (*SendResponse, error)
-	HandleMessageSentEvent()
+	HandleMessageSentEvent(context.Context, MessageSentEvent) error
 }
 
 type SendRequest struct {
@@ -23,10 +23,6 @@ type SendRequest struct {
 }
 
 type SendResponse struct{}
-
-type ReceiveResponse struct {
-	Messages []gochat.ReceivedMessage
-}
 
 // messaging.EventPublisher
 type EventPublisher interface {
@@ -83,7 +79,7 @@ func (s *service) Send(ctx context.Context, req SendRequest) (*SendResponse, err
 	return &SendResponse{}, nil
 }
 
-func (s *service) Receive(ctx context.Context) (*ReceiveResponse, error) {
+func (s *service) HandleMessageSentEvent(ctx context.Context, event MessageSentEvent) error {
 	// rms, _ := s.consumer.ConsumeMessageCreatedEvent(ctx)
 
 	// for _, rm := range rms {
@@ -93,7 +89,7 @@ func (s *service) Receive(ctx context.Context) (*ReceiveResponse, error) {
 	var cursor string
 	// TODO: run the following in a loop until there are unread messages
 	s.receivedMessages.FindAll(ctx, 10, cursor)
-	return nil, nil
+	return nil
 }
 
 // faisal, _ := gochat.NewUser("markhaur", "Faisal Nisar")
