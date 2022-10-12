@@ -9,7 +9,7 @@ import (
 type SentMessage struct {
 	id       string
 	sender   string
-	toGroups []GroupRecipients
+	toGroups []string
 	// Before: [G1, G2]
 	// After:  [{id: G1, participants: []}]
 	toContacts []string
@@ -133,11 +133,11 @@ type SentMessageRepository interface {
 }
 
 type Page[T any] struct {
-	Data       []T // TODO: use generics here
+	Data       []T
 	NextCursor string
 }
 
 type ReceivedMessageRepository interface {
 	Insert(context.Context, ReceivedMessage) (*ReceivedMessage, error)
-	FindAll(ctx context.Context, pageSize int, pageCursor string) (*Page, error)
+	FindAll(ctx context.Context, pageSize int, pageCursor string) (*Page[ReceivedMessage], error)
 }

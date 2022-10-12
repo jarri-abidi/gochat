@@ -1,3 +1,3 @@
-package notification
+package notifying
 
 type EventPublisher interface{}

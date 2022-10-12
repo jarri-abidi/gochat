@@ -27,8 +27,8 @@ type SendResponse struct{}
 // messaging.EventPublisher
 type EventPublisher interface {
 	PublishMessageSentEvent(context.Context, MessageSentEvent) error
-	PublishMessageReceivedEvent()
-	PublishMessageSeenEvent()
+	// PublishMessageReceivedEvent()
+	// PublishMessageSeenEvent()
 }
 
 type MessageSentEvent struct {

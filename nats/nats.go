@@ -2,7 +2,7 @@ package nats
 
 import (
 	"github.com/jarri-abidi/gochat/messaging"
-	"github.com/jarri-abidi/gochat/notification"
+	"github.com/jarri-abidi/gochat/notifying"
 )
 
 // nats.NewMessagingPublisher
@@ -12,7 +12,7 @@ func NewMessagingPublisher() messaging.EventPublisher {
 }
 
 // nats.NewNotificationPublisher
-// notification.Service needs a notification.EventPublisher
-func NewNotificationPublisher() notification.EventPublisher {
+// notifying.Service needs a notifying.EventPublisher
+func NewNotifyingPublisher() notifying.EventPublisher {
 	return nil
 }
