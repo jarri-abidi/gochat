@@ -27,6 +27,10 @@
     "createdAt": ...,
     "sentAt": ...,
     "received": [
+        "B": {
+            "G1": {"delivered": "12:00:00", "seen": "12:01:05"},
+            "DM:  {"delivered": "12:00:00", "seen": "12:01:09"}
+        }
         {"by": B, "at": "12:00:00", "in": "G1"},
         {"by": B, "at": "12:00:00", "in": "G2"},
         {"by": C, "at": "12:05:00", "in": "G2"},
@@ -115,3 +119,7 @@ A -> B
 
 CS1 -> CS2
 event
+
+
+
+Domain <- Application <- Infrastructure

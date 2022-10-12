@@ -7,15 +7,22 @@ import (
 )
 
 type SentMessage struct {
-	id         string
-	sender     string
-	toGroups   []string
+	id       string
+	sender   string
+	toGroups []GroupRecipients
+	// Before: [G1, G2]
+	// After:  [{id: G1, participants: []}]
 	toContacts []string
 	content    []byte
 	createdAt  time.Time
 	sentAt     time.Time
 	received   []recipient
 	seen       []recipient
+}
+
+type GroupRecipients struct {
+	id           string
+	participants []string
 }
 
 type recipient struct {
@@ -125,8 +132,8 @@ type SentMessageRepository interface {
 	Insert(context.Context, SentMessage) (*SentMessage, error)
 }
 
-type Page struct {
-	Data       []interface{} // TODO: use generics here
+type Page[T any] struct {
+	Data       []T // TODO: use generics here
 	NextCursor string
 }
 
