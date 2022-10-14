@@ -7,27 +7,20 @@ import (
 )
 
 type SentMessage struct {
-	id       string
-	sender   string
-	toGroups []string
-	// Before: [G1, G2]
-	// After:  [{id: G1, participants: []}]
-	toContacts []string
+	id         string
+	sender     string
 	content    []byte
 	createdAt  time.Time
 	sentAt     time.Time
-	received   []recipient
-	seen       []recipient
+	recipients recipients
 }
 
-type GroupRecipients struct {
-	id           string
-	participants []string
-}
+type recipients map[string][]status
 
-type recipient struct {
-	by, in string
-	at     time.Time
+type status struct {
+	in        string
+	delivered time.Time
+	seen      time.Time
 }
 
 func (sm SentMessage) SenderID() string { return sm.sender }
@@ -56,76 +49,46 @@ func NewMessage(
 	toContacts []Contact,
 	content []byte,
 	createdAt time.Time,
-) (*SentMessage, []ReceivedMessage, error) {
+) (*SentMessage, error) {
 	var (
-		id  = "" // TODO: generate uuid
-		now = time.Now()
-		rms = make(map[string]ReceivedMessage, 0)
+		id         = "" // TODO: generate uuid
+		now        = time.Now()
+		recipients = make(recipients, 0)
 	)
 
-	groupIDs := make([]string, 0, len(toGroups))
 	for _, g := range toGroups {
-		groupIDs = append(groupIDs, g.ID())
 		for _, p := range g.participants {
-			rm, found := rms[p.ID()]
+			statuses, found := recipients[p.ID()]
 			if found {
-				rm.in = append(rm.in, g.ID())
+				recipients[p.ID()] = append(statuses, status{in: g.ID()})
+
 				continue
 			}
 
-			rms[p.ID()] = ReceivedMessage{
-				id:        fmt.Sprintf("%s-%s", p.ID(), id), // TODO: need to discuss
-				receiver:  p.ID(),
-				sender:    sender.ID(),
-				in:        []string{g.ID()},
-				content:   content,
-				createdAt: createdAt,
-				sentAt:    now,
-			}
+			recipients[p.ID()] = append(make([]status, 0), status{in: g.ID()})
 		}
 	}
 
-	contactIDs := make([]string, 0, len(toContacts))
-	for _, u := range toContacts {
-		contactIDs = append(contactIDs, u.ID())
-		rm, found := rms[u.ID()]
+	for _, c := range toContacts {
+		statuses, found := recipients[c.ID()]
 		if found {
-			rm.in = append(rm.in, DM)
+			recipients[c.ID()] = append(statuses, status{in: DM})
 			continue
 		}
 
-		rms[u.ID()] = ReceivedMessage{
-			id:        fmt.Sprintf("%s-%s", u.ID(), id), // TODO: need to discuss
-			receiver:  u.ID(),
-			sender:    sender.ID(),
-			in:        []string{DM},
-			content:   content,
-			createdAt: createdAt,
-			sentAt:    now,
-		}
+		recipients[c.ID()] = append(make([]status, 0), status{in: DM})
 	}
 
 	sm := SentMessage{
 		id:         fmt.Sprintf("%s-%s", sender.ID(), id),
 		sender:     sender.ID(),
-		toGroups:   groupIDs,
-		toContacts: contactIDs,
 		content:    content,
 		createdAt:  createdAt,
 		sentAt:     now,
-		received:   make([]recipient, 0, 0),
-		seen:       make([]recipient, 0, 0),
+		recipients: recipients,
 	}
 
-	return &sm, mapToArr(rms), nil
-}
-
-func mapToArr(rms map[string]ReceivedMessage) []ReceivedMessage {
-	arr := make([]ReceivedMessage, 0, len(rms))
-	for _, rm := range rms {
-		arr = append(arr, rm)
-	}
-	return arr
+	return &sm, nil
 }
 
 type SentMessageRepository interface {

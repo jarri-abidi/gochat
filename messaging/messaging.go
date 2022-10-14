@@ -32,8 +32,8 @@ type EventPublisher interface {
 }
 
 type MessageSentEvent struct {
-	sentMessage      gochat.SentMessage
-	receivedMessages []gochat.ReceivedMessage
+	sentMessage gochat.SentMessage
+	// receivedMessages []gochat.ReceivedMessage
 }
 
 type EventConsumer interface {
@@ -52,7 +52,7 @@ type service struct {
 }
 
 func (s *service) Send(ctx context.Context, req SendRequest) (*SendResponse, error) {
-	sm, rms, err := gochat.NewMessage(req.Sender, req.Groups, req.Recipients, req.Content, req.CreatedAt)
+	sm, err := gochat.NewMessage(req.Sender, req.Groups, req.Recipients, req.Content, req.CreatedAt)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not create new message")
 	}
@@ -61,7 +61,7 @@ func (s *service) Send(ctx context.Context, req SendRequest) (*SendResponse, err
 	// each msg and find the server to which the recipient is connected.
 	// c would then send the message to that server otherwise if recipient
 	// is offline then perhaps send a push notification.
-	if err := s.publisher.PublishMessageSentEvent(ctx, MessageSentEvent{*sm, rms}); err != nil {
+	if err := s.publisher.PublishMessageSentEvent(ctx, MessageSentEvent{*sm}); err != nil {
 		return nil, errors.Wrap(err, "could not publish message")
 	}
 
