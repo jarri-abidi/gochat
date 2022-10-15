@@ -11,7 +11,7 @@ import (
 
 type Service interface {
 	Send(context.Context, SendRequest) (*SendResponse, error)
-	HandleMessageSentEvent(context.Context, MessageSentEvent) error
+	HandleSentEvent(context.Context, SentEvent) error
 }
 
 type SendRequest struct {
@@ -26,18 +26,18 @@ type SendResponse struct{}
 
 // messaging.EventPublisher
 type EventPublisher interface {
-	PublishMessageSentEvent(context.Context, MessageSentEvent) error
+	PublishSentEvent(context.Context, SentEvent) error
 	// PublishMessageReceivedEvent()
 	// PublishMessageSeenEvent()
 }
 
-type MessageSentEvent struct {
+type SentEvent struct {
 	sentMessage gochat.SentMessage
 	// receivedMessages []gochat.ReceivedMessage
 }
 
 type EventConsumer interface {
-	ConsumeMessageSentEvent(context.Context) (*MessageSentEvent, error)
+	ConsumeMessageSentEvent(context.Context) (*SentEvent, error)
 }
 
 func NewService() Service {
@@ -61,7 +61,7 @@ func (s *service) Send(ctx context.Context, req SendRequest) (*SendResponse, err
 	// each msg and find the server to which the recipient is connected.
 	// c would then send the message to that server otherwise if recipient
 	// is offline then perhaps send a push notification.
-	if err := s.publisher.PublishMessageSentEvent(ctx, MessageSentEvent{*sm}); err != nil {
+	if err := s.publisher.PublishSentEvent(ctx, SentEvent{*sm}); err != nil {
 		return nil, errors.Wrap(err, "could not publish message")
 	}
 
@@ -79,7 +79,14 @@ func (s *service) Send(ctx context.Context, req SendRequest) (*SendResponse, err
 	return &SendResponse{}, nil
 }
 
-func (s *service) HandleMessageSentEvent(ctx context.Context, event MessageSentEvent) error {
+func (s *service) HandleSentEvent(ctx context.Context, event SentEvent) error {
+	// TODO: create receivedMessages
+	// for each receivedMessage
+	// - check if recipient is online (presence service)
+	// - if online, send the message to the server on which they're online
+	// - if offline, publish an event for notifying service to consume
+	// - save all messages to database
+
 	// rms, _ := s.consumer.ConsumeMessageCreatedEvent(ctx)
 
 	// for _, rm := range rms {
