@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/jarri-abidi/gochat"
+	"github.com/jarri-abidi/gochat/notifying"
+	"github.com/jarri-abidi/gochat/presence"
 
 	"github.com/pkg/errors"
 )
@@ -49,6 +51,8 @@ type service struct {
 	receivedMessages gochat.ReceivedMessageRepository
 	publisher        EventPublisher
 	consumer         EventConsumer
+	presenceService  presence.Service
+	notifyingService notifying.Service
 }
 
 func (s *service) Send(ctx context.Context, req SendRequest) (*SendResponse, error) {
@@ -86,6 +90,24 @@ func (s *service) HandleSentEvent(ctx context.Context, event SentEvent) error {
 	// - if online, send the message to the server on which they're online
 	// - if offline, publish an event for notifying service to consume
 	// - save all messages to database
+
+	rms := gochat.GetReceivedMessages(event.sentMessage)
+	for _, rm := range rms {
+		rsp, err := s.presenceService.FindUser(ctx, presence.FindUserRequest{})
+		if err != nil {
+			return errors.Wrapf(err, "could not find recipient %s", rm.RecipientID())
+		}
+
+		if rsp.IsOnline {
+
+		}
+
+		if !rsp.IsOnline {
+			s.notifyingService.PushNotification(ctx, notifying.PushNotificationRequest{
+				Content: event.sentMessage.Content(),
+			})
+		}
+	}
 
 	// rms, _ := s.consumer.ConsumeMessageCreatedEvent(ctx)
 
