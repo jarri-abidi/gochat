@@ -10,5 +10,5 @@ type FindUserRequest struct{}
 
 type FindUserResponse struct {
 	IsOnline bool
-	Server   string
+	Address  string
 }
