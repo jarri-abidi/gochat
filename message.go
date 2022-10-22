@@ -25,6 +25,7 @@ type Status struct {
 
 func (sm SentMessage) SenderID() string       { return sm.sender }
 func (sm SentMessage) Recipients() Recipients { return sm.recipients }
+func (sm SentMessage) Content() []byte        { return sm.content }
 
 type ReceivedMessage struct {
 	id         string
@@ -38,6 +39,7 @@ type ReceivedMessage struct {
 }
 
 func (rm ReceivedMessage) RecipientID() string { return rm.recipient }
+func (rm ReceivedMessage) SenderID() string    { return rm.sender }
 
 const DM = "DM"
 

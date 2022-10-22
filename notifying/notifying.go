@@ -9,6 +9,7 @@ type Service interface {
 type PushNotificationRequest struct {
 	Header  []byte
 	Content []byte
+	UserID string
 }
 
 type EventPublisher interface{}

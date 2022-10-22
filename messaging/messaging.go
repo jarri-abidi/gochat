@@ -2,6 +2,7 @@ package messaging
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/jarri-abidi/gochat"
@@ -103,9 +104,15 @@ func (s *service) HandleSentEvent(ctx context.Context, event SentEvent) error {
 		}
 
 		if !rsp.IsOnline {
-			s.notifyingService.PushNotification(ctx, notifying.PushNotificationRequest{
+			err = s.notifyingService.PushNotification(ctx, notifying.PushNotificationRequest{
 				Content: event.sentMessage.Content(),
+				UserID:  rm.RecipientID(),
+				Header:  []byte(fmt.Sprintf("Unread Message")), //TODO Change placeholder for unread message
 			})
+
+			if err != nil {
+				return errors.Wrapf(err, "could not send push notification %s", rm.RecipientID())
+			}
 		}
 	}
 
