@@ -40,7 +40,7 @@ type SentEvent struct {
 }
 
 type EventConsumer interface {
-	ConsumeMessageSentEvent(context.Context) (*SentEvent, error)
+	ConsumeSentEvent(context.Context) (*SentEvent, error)
 }
 
 func NewService() Service {

@@ -22,16 +22,16 @@ type inmemQueue struct {
 
 const messageEventSentKey = "MESSAGE_SENT_EVENT"
 
-func (q *inmemQueue) ConsumeMessageSentEvent(ctx context.Context) (*messaging.MessageSentEvent, error) {
+func (q *inmemQueue) ConsumeSentEvent(ctx context.Context) (*messaging.SentEvent, error) {
 	v := <-q.msgs[messageEventSentKey]
-	event, ok := v.(messaging.MessageSentEvent)
+	event, ok := v.(messaging.SentEvent)
 	if !ok {
 		return nil, errors.New("event type was not MessageSentEvent")
 	}
 	return &event, nil
 }
 
-func (q *inmemQueue) PublishMessageSentEvent(ctx context.Context, event messaging.MessageSentEvent) error {
+func (q *inmemQueue) PublishSentEvent(ctx context.Context, event messaging.SentEvent) error {
 	q.msgs[messageEventSentKey] <- event
 	return nil
 }
