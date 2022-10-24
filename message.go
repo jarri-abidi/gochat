@@ -22,9 +22,12 @@ type Status struct {
 	seen      time.Time
 }
 
+func (sm SentMessage) ID() string             { return sm.id }
 func (sm SentMessage) SenderID() string       { return sm.sender }
 func (sm SentMessage) Recipients() Recipients { return sm.recipients }
 func (sm SentMessage) Content() []byte        { return sm.content }
+func (sm SentMessage) CreatedAt() time.Time   { return sm.createdAt }
+func (sm SentMessage) SentAt() time.Time      { return sm.sentAt }
 
 type ReceivedMessage struct {
 	id         string
@@ -87,23 +90,26 @@ func NewMessage(
 }
 
 func GetReceivedMessages(sm SentMessage) []ReceivedMessage {
-	var (
-		id  = "" // TODO: generate uuid
-		now = time.Now()
-		rms = make(map[string]ReceivedMessage, 0)
-	)
+	rms := make([]ReceivedMessage, 0)
 
 	for recipientID, statuses := range sm.Recipients() {
-		rm := ReceivedMessage{
-			id:        fmt.Sprintf("%s-%s", sm.ID(), id), // TODO: need to discuss
-			receiver:  p.ID(),
-			sender:    sender.ID(),
-			in:        []string{g.ID()},
-			content:   content,
-			createdAt: createdAt,
-			sentAt:    now,
+		in := make([]string, 0, len(statuses))
+		for _, status := range statuses {
+			in = append(in, status.in)
 		}
+
+		rms = append(rms, ReceivedMessage{
+			id:        sm.ID(),
+			recipient: recipientID,
+			sender:    sm.SenderID(),
+			in:        in,
+			content:   sm.Content(),
+			createdAt: sm.CreatedAt(),
+			sentAt:    sm.SentAt(),
+		})
 	}
+
+	return rms
 }
 
 type SentMessageRepository interface {
