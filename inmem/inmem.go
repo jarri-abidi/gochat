@@ -20,10 +20,11 @@ type inmemQueue struct {
 	msgs map[string]chan interface{}
 }
 
-const messageEventSentKey = "MESSAGE_SENT_EVENT"
+const messageSentEventKey = "MESSAGE_SENT_EVENT"
+const messageRelayEventKey = "RELAY_EVENT"
 
 func (q *inmemQueue) ConsumeSentEvent(ctx context.Context) (*messaging.SentEvent, error) {
-	v := <-q.msgs[messageEventSentKey]
+	v := <-q.msgs[messageSentEventKey]
 	event, ok := v.(messaging.SentEvent)
 	if !ok {
 		return nil, errors.New("event type was not MessageSentEvent")
@@ -31,7 +32,17 @@ func (q *inmemQueue) ConsumeSentEvent(ctx context.Context) (*messaging.SentEvent
 	return &event, nil
 }
 
+func (q *inmemQueue) ConsumeRelayEvent(ctx context.Context) (*messaging.RelayEvent, error) {
+	// TODO: implement
+	return nil, nil
+}
+
 func (q *inmemQueue) PublishSentEvent(ctx context.Context, event messaging.SentEvent) error {
-	q.msgs[messageEventSentKey] <- event
+	q.msgs[messageSentEventKey] <- event
+	return nil
+}
+
+func (q *inmemQueue) PublishRelayEvent(ctx context.Context, event messaging.RelayEvent) error {
+	q.msgs[messageRelayEventKey] <- event
 	return nil
 }

@@ -48,7 +48,7 @@ const DM = "DM"
 // NewMessage accepts a list of groups and users to which the message needs to be sent.
 // It also accepts the content as a slice of bytes. The value of createdAt should be the time
 // when the sender created the message as opposed to when it was received by the server.
-func NewMessage(
+func NewSentMessage(
 	sender User,
 	toGroups []Group,
 	toContacts []Contact,
@@ -89,7 +89,7 @@ func NewMessage(
 	return &sm, nil
 }
 
-func GetReceivedMessages(sm SentMessage) []ReceivedMessage {
+func NewReceivedMessages(sm SentMessage) []ReceivedMessage {
 	rms := make([]ReceivedMessage, 0)
 
 	for recipientID, statuses := range sm.Recipients() {

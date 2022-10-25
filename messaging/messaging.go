@@ -2,7 +2,6 @@ package messaging
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/jarri-abidi/gochat"
@@ -30,17 +29,23 @@ type SendResponse struct{}
 // messaging.EventPublisher
 type EventPublisher interface {
 	PublishSentEvent(context.Context, SentEvent) error
+	PublishRelayEvent(context.Context, RelayEvent) error
 	// PublishMessageReceivedEvent()
 	// PublishMessageSeenEvent()
 }
 
 type SentEvent struct {
-	sentMessage gochat.SentMessage
-	// receivedMessages []gochat.ReceivedMessage
+	SentMessage gochat.SentMessage
+}
+
+type RelayEvent struct {
+	ReceivedMessage gochat.ReceivedMessage
+	Address         string
 }
 
 type EventConsumer interface {
 	ConsumeSentEvent(context.Context) (*SentEvent, error)
+	ConsumeRelayEvent(context.Context) (*RelayEvent, error)
 }
 
 func NewService() Service {
@@ -57,7 +62,7 @@ type service struct {
 }
 
 func (s *service) Send(ctx context.Context, req SendRequest) (*SendResponse, error) {
-	sm, err := gochat.NewMessage(req.Sender, req.Groups, req.Recipients, req.Content, req.CreatedAt)
+	sm, err := gochat.NewSentMessage(req.Sender, req.Groups, req.Recipients, req.Content, req.CreatedAt)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not create new message")
 	}
@@ -92,22 +97,31 @@ func (s *service) HandleSentEvent(ctx context.Context, event SentEvent) error {
 	// - if offline, publish an event for notifying service to consume
 	// - save all messages to database
 
-	rms := gochat.GetReceivedMessages(event.sentMessage)
+	rms := gochat.NewReceivedMessages(event.SentMessage)
 	for _, rm := range rms {
 		rsp, err := s.presenceService.FindUser(ctx, presence.FindUserRequest{})
 		if err != nil {
 			return errors.Wrapf(err, "could not find recipient %s", rm.RecipientID())
 		}
 
+		// isOnline, serverId
+		// map(serverId, client)
 		if rsp.IsOnline {
-
+			err = s.publisher.PublishRelayEvent(ctx, RelayEvent{
+				ReceivedMessage: rm,
+				Address:         rsp.Address,
+			})
+			if err != nil {
+				// TODO: need to log (after proper discussion)
+				continue
+			}
 		}
 
 		if !rsp.IsOnline {
 			if err := s.notifyingService.PushNotification(ctx, notifying.PushNotificationRequest{
-				Content: event.sentMessage.Content(),
+				Content: event.SentMessage.Content(),
 				UserID:  rm.RecipientID(),
-				Header:  []byte(fmt.Sprintf("Unread Message")), //TODO Change placeholder for unread message
+				Header:  []byte("Unread Message"), //TODO Change placeholder for unread message
 			}); err != nil {
 				return errors.Wrapf(err, "could not send push notification %s", rm.RecipientID())
 			}
@@ -123,6 +137,11 @@ func (s *service) HandleSentEvent(ctx context.Context, event SentEvent) error {
 	var cursor string
 	// TODO: run the following in a loop until there are unread messages
 	s.receivedMessages.FindAll(ctx, 10, cursor)
+	return nil
+}
+
+func (s *service) HandleRelayEvent(ctx context.Context, event RelayEvent) error {
+
 	return nil
 }
 
