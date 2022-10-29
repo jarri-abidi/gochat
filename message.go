@@ -40,12 +40,13 @@ type ReceivedMessage struct {
 	receivedAt time.Time
 }
 
+func (rm ReceivedMessage) ID() string          { return rm.id }
 func (rm ReceivedMessage) RecipientID() string { return rm.recipient }
 func (rm ReceivedMessage) SenderID() string    { return rm.sender }
 
 const DM = "DM"
 
-// NewMessage accepts a list of groups and users to which the message needs to be sent.
+// NewSentMessage accepts a list of groups and contacts to which the message needs to be sent.
 // It also accepts the content as a slice of bytes. The value of createdAt should be the time
 // when the sender created the message as opposed to when it was received by the server.
 func NewSentMessage(

@@ -117,3 +117,7 @@ event
 
 
 Domain <- Application <- Infrastructure
+
+Sender----> CS1                     Consumer                    CS2                                           <----Recipient
+Send        Send, PublishSentEvent  HandleSentEvent, Relay      Relay, PublishRelayEvent, HandleRelayEvent
+Websocket   Websocket, NATS         NATS             Websocket  Websocket, Go channel     Websocket                Websocket

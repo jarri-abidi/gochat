@@ -1,18 +1,19 @@
 package nats
 
 import (
+	"context"
+
 	"github.com/jarri-abidi/gochat/messaging"
-	"github.com/jarri-abidi/gochat/notifying"
 )
 
-// nats.NewMessagingPublisher
-// messaging.Service needs a messaging.EventPublisher
-func NewMessagingPublisher() messaging.EventPublisher {
+type Publisher struct{}
+
+func (p *Publisher) PublishSentEvent(ctx context.Context, event messaging.SentEvent) error {
 	return nil
 }
 
-// nats.NewNotificationPublisher
-// notifying.Service needs a notifying.EventPublisher
-func NewNotifyingPublisher() notifying.EventPublisher {
-	return nil
+type Consumer struct{}
+
+func (c *Consumer) ConsumeSentEvent(ctx context.Context) (*messaging.SentEvent, error) {
+	return nil, nil
 }

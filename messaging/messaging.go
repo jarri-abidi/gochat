@@ -13,7 +13,8 @@ import (
 
 type Service interface {
 	Send(context.Context, SendRequest) (*SendResponse, error)
-	HandleSentEvent(context.Context, SentEvent) error
+	// HandleSentEvent(context.Context, SentEvent) error
+	Relay(context.Context, RelayRequest) (*RelayResponse, error)
 }
 
 type SendRequest struct {
@@ -26,7 +27,14 @@ type SendRequest struct {
 
 type SendResponse struct{}
 
-// messaging.EventPublisher
+type RelayRequest struct {
+	ReceivedMessage gochat.ReceivedMessage
+	Address         string
+}
+
+type RelayResponse struct{}
+
+// EventPublisher
 type EventPublisher interface {
 	PublishSentEvent(context.Context, SentEvent) error
 	PublishRelayEvent(context.Context, RelayEvent) error
@@ -40,7 +48,6 @@ type SentEvent struct {
 
 type RelayEvent struct {
 	ReceivedMessage gochat.ReceivedMessage
-	Address         string
 }
 
 type EventConsumer interface {
@@ -72,21 +79,21 @@ func (s *service) Send(ctx context.Context, req SendRequest) (*SendResponse, err
 	// c would then send the message to that server otherwise if recipient
 	// is offline then perhaps send a push notification.
 	if err := s.publisher.PublishSentEvent(ctx, SentEvent{*sm}); err != nil {
-		return nil, errors.Wrap(err, "could not publish message")
+		return nil, errors.Wrapf(err, "could not publish message %s", sm.ID())
 	}
 
-	// if _, err := s.sentMessages.Insert(ctx, *sm); err != nil {
-	// 	return nil, errors.Wrapf(err, "could not save message for sender", sm.SenderID())
-	// }
-
-	// for _, rm := range rms {
-	// 	if _, err := s.receivedMessages.Insert(ctx, rm); err != nil {
-	// 		// TODO: don't fail unless all failed
-	// 		return nil, errors.Wrapf(err, "could not save message for recipient %s", rm.ReceiverID())
-	// 	}
-	// }
-
 	return &SendResponse{}, nil
+}
+
+func (s *service) Relay(ctx context.Context, req RelayRequest) (*RelayResponse, error) {
+	err := s.publisher.PublishRelayEvent(ctx, RelayEvent{req.ReceivedMessage})
+	if err != nil {
+		return nil, errors.Wrapf(
+			err, "could not publish relay event for recipient %s message %s",
+			req.ReceivedMessage.RecipientID(), req.ReceivedMessage.ID(),
+		)
+	}
+	return &RelayResponse{}, nil
 }
 
 func (s *service) HandleSentEvent(ctx context.Context, event SentEvent) error {
@@ -104,10 +111,9 @@ func (s *service) HandleSentEvent(ctx context.Context, event SentEvent) error {
 			return errors.Wrapf(err, "could not find recipient %s", rm.RecipientID())
 		}
 
-		// isOnline, serverId
-		// map(serverId, client)
 		if rsp.IsOnline {
-			err = s.publisher.PublishRelayEvent(ctx, RelayEvent{
+			// TODO: Relay should actually be a network call
+			_, err = s.Relay(ctx, RelayRequest{
 				ReceivedMessage: rm,
 				Address:         rsp.Address,
 			})
@@ -128,26 +134,28 @@ func (s *service) HandleSentEvent(ctx context.Context, event SentEvent) error {
 		}
 	}
 
-	// rms, _ := s.consumer.ConsumeMessageCreatedEvent(ctx)
+	if _, err := s.sentMessages.Insert(ctx, event.SentMessage); err != nil {
+		return errors.Wrapf(err, "could not save message for sender %s", event.SentMessage.SenderID())
+	}
 
-	// for _, rm := range rms {
-	// 	s.presenceService
-	// }
+	for _, rm := range rms {
+		if _, err := s.receivedMessages.Insert(ctx, rm); err != nil {
+			// TODO: don't fail unless all failed
+			return errors.Wrapf(err, "could not save message for recipient %s", rm.RecipientID())
+		}
+	}
 
-	var cursor string
-	// TODO: run the following in a loop until there are unread messages
-	s.receivedMessages.FindAll(ctx, 10, cursor)
 	return nil
 }
 
+// HandleRelayEvent forwards the ReceivedMessage to the recipient.
 func (s *service) HandleRelayEvent(ctx context.Context, event RelayEvent) error {
-
 	return nil
 }
 
 // faisal, _ := gochat.NewUser("markhaur", "Faisal Nisar")
 // jarri, _ := gochat.NewUser("jarri-abidi", "Jarri Abidi")
-// sarim, _ := gochat.NewUser("sa41m", "sarim")
+// sarim, _ := gochat.NewUser("s4r1m", "sarim")
 
 // fContact, _ := gochat.NewContact(faisal.ID(), faisal.FullName(), faisal.UserName())
 // jContact, _ := gochat.NewContact(jarri.ID(), jarri.FullName(), jarri.UserName())
