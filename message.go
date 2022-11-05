@@ -113,6 +113,27 @@ func NewReceivedMessages(sm SentMessage) []ReceivedMessage {
 	return rms
 }
 
+func NewReceivedMessage(
+	id string,
+	recipient string,
+	sender string,
+	in []string,
+	content []byte,
+	createdAt time.Time,
+	sentAt time.Time,
+	receivedAt time.Time) ReceivedMessage {
+	return ReceivedMessage{
+		id:         id,
+		recipient:  recipient,
+		sender:     sender,
+		in:         in,
+		content:    content,
+		createdAt:  createdAt,
+		sentAt:     sentAt,
+		receivedAt: receivedAt,
+	}
+}
+
 type SentMessageRepository interface {
 	Insert(context.Context, SentMessage) (*SentMessage, error)
 }

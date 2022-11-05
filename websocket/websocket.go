@@ -11,8 +11,7 @@ import (
 )
 
 type Connections struct {
-	servers map[net.Addr]websocket.Conn
-	users   map[string]websocket.Conn
+	users map[string]websocket.Conn
 }
 
 func (c *Connections) Relay(ctx context.Context, msg gochat.ReceivedMessage) error {

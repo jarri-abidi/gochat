@@ -8,4 +8,7 @@ require (
 	github.com/pkg/errors v0.9.1
 )
 
-require github.com/go-logfmt/logfmt v0.5.1 // indirect
+require (
+	github.com/go-logfmt/logfmt v0.5.1 // indirect
+	github.com/gorilla/mux v1.8.0 // indirect
+)
