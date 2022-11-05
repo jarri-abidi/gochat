@@ -150,6 +150,7 @@ func (s *service) HandleSentEvent(ctx context.Context, event SentEvent) error {
 
 // HandleRelayEvent forwards the ReceivedMessage to the recipient.
 func (s *service) HandleRelayEvent(ctx context.Context, event RelayEvent) error {
+
 	return nil
 }
 
