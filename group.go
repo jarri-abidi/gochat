@@ -10,6 +10,7 @@ import (
 type Group struct {
 	id           string
 	name         string
+	description  string
 	participants []Contact
 }
 

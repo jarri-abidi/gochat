@@ -2,32 +2,36 @@ package gochat
 
 import (
 	"context"
-	"fmt"
 	"time"
 )
 
 type SentMessage struct {
 	id         string
 	sender     string
-	toGroups   []string
-	toContacts []string
 	content    []byte
 	createdAt  time.Time
 	sentAt     time.Time
-	received   []recipient
-	seen       []recipient
+	recipients Recipients
 }
 
-type recipient struct {
-	by, in string
-	at     time.Time
+type Recipients map[string][]Status
+
+type Status struct {
+	in        string
+	delivered time.Time
+	seen      time.Time
 }
 
-func (sm SentMessage) SenderID() string { return sm.sender }
+func (sm SentMessage) ID() string             { return sm.id }
+func (sm SentMessage) SenderID() string       { return sm.sender }
+func (sm SentMessage) Recipients() Recipients { return sm.recipients }
+func (sm SentMessage) Content() []byte        { return sm.content }
+func (sm SentMessage) CreatedAt() time.Time   { return sm.createdAt }
+func (sm SentMessage) SentAt() time.Time      { return sm.sentAt }
 
 type ReceivedMessage struct {
 	id         string
-	receiver   string
+	recipient  string
 	sender     string
 	in         []string
 	content    []byte
@@ -36,101 +40,110 @@ type ReceivedMessage struct {
 	receivedAt time.Time
 }
 
-func (rm ReceivedMessage) ReceiverID() string { return rm.receiver }
+func (rm ReceivedMessage) ID() string          { return rm.id }
+func (rm ReceivedMessage) RecipientID() string { return rm.recipient }
+func (rm ReceivedMessage) SenderID() string    { return rm.sender }
 
 const DM = "DM"
 
-// NewMessage accepts a list of groups and users to which the message needs to be sent.
+// NewSentMessage accepts a list of groups and contacts to which the message needs to be sent.
 // It also accepts the content as a slice of bytes. The value of createdAt should be the time
 // when the sender created the message as opposed to when it was received by the server.
-func NewMessage(
+func NewSentMessage(
 	sender User,
 	toGroups []Group,
 	toContacts []Contact,
 	content []byte,
 	createdAt time.Time,
-) (*SentMessage, []ReceivedMessage, error) {
-	var (
-		id  = "" // TODO: generate uuid
-		now = time.Now()
-		rms = make(map[string]ReceivedMessage, 0)
-	)
+) (*SentMessage, error) {
+	recipients := make(Recipients, 0)
 
-	groupIDs := make([]string, 0, len(toGroups))
 	for _, g := range toGroups {
-		groupIDs = append(groupIDs, g.ID())
 		for _, p := range g.participants {
-			rm, found := rms[p.ID()]
+			statuses, found := recipients[p.ID()]
 			if found {
-				rm.in = append(rm.in, g.ID())
+				recipients[p.ID()] = append(statuses, Status{in: g.ID()})
 				continue
 			}
-
-			rms[p.ID()] = ReceivedMessage{
-				id:        fmt.Sprintf("%s-%s", p.ID(), id), // TODO: need to discuss
-				receiver:  p.ID(),
-				sender:    sender.ID(),
-				in:        []string{g.ID()},
-				content:   content,
-				createdAt: createdAt,
-				sentAt:    now,
-			}
+			recipients[p.ID()] = append(make([]Status, 0), Status{in: g.ID()})
 		}
 	}
 
-	contactIDs := make([]string, 0, len(toContacts))
-	for _, u := range toContacts {
-		contactIDs = append(contactIDs, u.ID())
-		rm, found := rms[u.ID()]
+	for _, c := range toContacts {
+		statuses, found := recipients[c.ID()]
 		if found {
-			rm.in = append(rm.in, DM)
+			recipients[c.ID()] = append(statuses, Status{in: DM})
 			continue
 		}
-
-		rms[u.ID()] = ReceivedMessage{
-			id:        fmt.Sprintf("%s-%s", u.ID(), id), // TODO: need to discuss
-			receiver:  u.ID(),
-			sender:    sender.ID(),
-			in:        []string{DM},
-			content:   content,
-			createdAt: createdAt,
-			sentAt:    now,
-		}
+		recipients[c.ID()] = append(make([]Status, 0), Status{in: DM})
 	}
 
 	sm := SentMessage{
-		id:         fmt.Sprintf("%s-%s", sender.ID(), id),
+		id:         "", // generate uuid
 		sender:     sender.ID(),
-		toGroups:   groupIDs,
-		toContacts: contactIDs,
 		content:    content,
 		createdAt:  createdAt,
-		sentAt:     now,
-		received:   make([]recipient, 0, 0),
-		seen:       make([]recipient, 0, 0),
+		sentAt:     time.Now(),
+		recipients: recipients,
 	}
 
-	return &sm, mapToArr(rms), nil
+	return &sm, nil
 }
 
-func mapToArr(rms map[string]ReceivedMessage) []ReceivedMessage {
-	arr := make([]ReceivedMessage, 0, len(rms))
-	for _, rm := range rms {
-		arr = append(arr, rm)
+func NewReceivedMessages(sm SentMessage) []ReceivedMessage {
+	rms := make([]ReceivedMessage, 0)
+
+	for recipientID, statuses := range sm.Recipients() {
+		in := make([]string, 0, len(statuses))
+		for _, status := range statuses {
+			in = append(in, status.in)
+		}
+
+		rms = append(rms, ReceivedMessage{
+			id:        sm.ID(),
+			recipient: recipientID,
+			sender:    sm.SenderID(),
+			in:        in,
+			content:   sm.Content(),
+			createdAt: sm.CreatedAt(),
+			sentAt:    sm.SentAt(),
+		})
 	}
-	return arr
+
+	return rms
+}
+
+func NewReceivedMessage(
+	id string,
+	recipient string,
+	sender string,
+	in []string,
+	content []byte,
+	createdAt time.Time,
+	sentAt time.Time,
+	receivedAt time.Time) ReceivedMessage {
+	return ReceivedMessage{
+		id:         id,
+		recipient:  recipient,
+		sender:     sender,
+		in:         in,
+		content:    content,
+		createdAt:  createdAt,
+		sentAt:     sentAt,
+		receivedAt: receivedAt,
+	}
 }
 
 type SentMessageRepository interface {
 	Insert(context.Context, SentMessage) (*SentMessage, error)
 }
 
-type Page struct {
-	Data       []interface{} // TODO: use generics here
+type Page[T any] struct {
+	Data       []T
 	NextCursor string
 }
 
 type ReceivedMessageRepository interface {
 	Insert(context.Context, ReceivedMessage) (*ReceivedMessage, error)
-	FindAll(ctx context.Context, pageSize int, pageCursor string) (*Page, error)
+	FindAll(ctx context.Context, pageSize int, pageCursor string) (*Page[ReceivedMessage], error)
 }

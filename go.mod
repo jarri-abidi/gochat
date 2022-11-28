@@ -1,9 +1,14 @@
 module github.com/jarri-abidi/gochat
 
-go 1.16
+go 1.18
 
 require (
-	github.com/go-kit/log v0.2.1 // indirect
-	github.com/gorilla/websocket v1.5.0 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
+	github.com/go-kit/log v0.2.1
+	github.com/gorilla/websocket v1.5.0
+	github.com/pkg/errors v0.9.1
+)
+
+require (
+	github.com/go-logfmt/logfmt v0.5.1 // indirect
+	github.com/gorilla/mux v1.8.0 // indirect
 )

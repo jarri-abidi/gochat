@@ -21,25 +21,23 @@
 ```
 {
     "id": "123"
-    "toGroups": [G1, G2]
-    "toUsers": [C, D]
+    "sender": ...,
     "content": ...,
     "createdAt": ...,
     "sentAt": ...,
-    "received": [
-        {"by": B, "at": "12:00:00", "in": "G1"},
-        {"by": B, "at": "12:00:00", "in": "G2"},
-        {"by": C, "at": "12:05:00", "in": "G2"},
-        {"by": C, "at": "12:05:00"},
-        {"by": D, "at": "12:00:00"}
-    ] 
-    "seen": [
-        {"by": B, "at": "12:01:05", "in": "G1"},
-        {"by": B, "at": "12:01:00", "in": "G2"},
-        {"by": C, "at": "12:10:00", "in": "G2"},
-        {"by": C, "at": "12:10:05"},
-        {"by": D, "at": "12:20:00"}
-    ] 
+    "recipients": {
+        "B": [
+            {"in": "G1", "delivered": "12:00:00", "seen": "12:01:05"},
+            {"in": "G2", "delivered": "12:00:00", "seen": "12:01:09"}
+        ],
+        "C": [
+            {"in": "G2", "delivered": "12:00:00", "seen": "12:01:05"},
+            {"in": "DM", "delivered": "12:00:00", "seen": "12:01:09"}
+        ],
+        "D": [
+            {"in": "DM", "delivered": "12:00:00", "seen": "12:01:09"}
+        ]
+    }
 }
 ```
 - MessageReceived
@@ -115,3 +113,11 @@ A -> B
 
 CS1 -> CS2
 event
+
+
+
+Domain <- Application <- Infrastructure
+
+Sender----> CS1                     Consumer                    CS2                                           <----Recipient
+Send        Send, PublishSentEvent  HandleSentEvent, Relay      Relay, PublishRelayEvent, HandleRelayEvent
+Websocket   Websocket, NATS         NATS             Websocket  Websocket, Go channel     Websocket                Websocket

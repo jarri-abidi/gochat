@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bufio"
 	"net/url"
 	"os"
 	"os/signal"
+	"strings"
 	"time"
 
 	"github.com/go-kit/log"
@@ -57,7 +59,11 @@ func main() {
 	signal.Notify(interrupt, os.Interrupt)
 	var idCounter int64
 	var msg Message
+	reader := bufio.NewReader(os.Stdin)
 	for {
+		text, _ := reader.ReadString('\n')
+		// convert CRLF to LF
+		text = strings.Replace(text, "\n", "", -1)
 		select {
 		case <-done:
 			return
@@ -67,7 +73,7 @@ func main() {
 			msg.MsgID = idCounter
 			msg.MsgFrom = 1
 			msg.MsgTo = -1
-			msg.Content = "hi"
+			msg.Content = text
 			msg.CreatedAt = t
 			err := conn.WriteJSON(&msg)
 			if err != nil {
